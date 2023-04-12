@@ -1,9 +1,9 @@
-from flask import Blueprint, url_for, request, render_template, flash
-from werkzeug.security import generate_password_hash
+from flask import Blueprint, url_for, request, render_template, flash, session, g
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 
 from pybo import db
-from pybo.forms import UserCreateForm
+from pybo.forms import UserCreateForm, UserLoginForm
 from pybo.models import User
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -24,3 +24,36 @@ def signup():
         else:
             flash('이미 존재하는 사용자입니다.')
     return render_template('auth/signup.html', form=form)
+
+
+@bp.route('/login/', methods=('GET', 'POST'))
+def login():
+    form = UserLoginForm()      # forms.py에서 가져온다
+    if request.method == 'POST' and form.validate_on_submit():
+        error = None
+        user = User.query.filter_by(username=form.username.data).first()
+        if not user:
+            error = "존재하지 않는 사용자입니다."
+        elif not check_password_hash(user.password, form.password.data):
+            error = "비밀번호가 올바르지 않습니다."
+        if error is None:
+            session.clear()
+            session['user_id'] = user.id
+            return redirect(url_for('main.index'))
+        flash(error)
+    return render_template('auth/login.html', form=form)
+
+
+@bp.before_app_request  # 내부에서 최우순적으로 실행시켜주는 어노테이션
+def load_logged_in_user():
+    user_id = session.get('user_id')
+    if user_id is None:
+        g.user = None
+    else:                                   # user_id 세션에 값 있으면
+        g.user = User.query.get(user_id)    # g.user에 넣어주기
+        # 참고: g 변수는 플라스크의 컨텍스트 변수. 응답(request)이 끝나기 전까지만 유지된다.
+
+@bp.route('/logout/')
+def logout():
+    session.clear()
+    return redirect(url_for('main.index'))
