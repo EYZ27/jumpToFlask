@@ -1,6 +1,11 @@
-from flask import Blueprint, render_template
+from datetime import datetime
 
-from pybo.models import Question
+from flask import Blueprint, render_template, request, url_for
+from werkzeug.utils import redirect
+
+from .. import db
+from ..models import Question
+from ..forms import QuestionForm, AnswerForm
 
 
 bp = Blueprint('question', __name__, url_prefix='/question')
@@ -8,12 +13,26 @@ bp = Blueprint('question', __name__, url_prefix='/question')
 
 @bp.route('/list/')
 def _list():
+    page = request.args.get('page', type=int, default=1)    # 페이지
     question_list = Question.query.order_by(Question.create_date.desc())
+    question_list = question_list.paginate(page=page, per_page=10)
     return render_template('question/question_list.html', question_list=question_list)
     # render_template 가 html 파일 내의 파이썬 코드를 다 rendering 시켜서 html 코드로 넣어준다.
 
 
 @bp.route('/detail/<int:question_id>/')
 def detail(question_id):
+    form = AnswerForm()
     question = Question.query.get_or_404(question_id) # 404 오류면 오류페이지를 내보내겠다
-    return render_template('question/question_detail.html', question=question)
+    return render_template('question/question_detail.html', question=question, form=form)
+
+
+@bp.route('/create/', methods=('GET', 'POST'))
+def create():
+    form = QuestionForm()
+    if request.method == 'POST' and form.validate_on_submit():  # 요청 방식 확인, 유효성 검사 통과
+        question = Question(subject=form.subject.data, content=form.content.data, create_date=datetime.now())
+        db.session.add(question)
+        db.session.commit()
+        return redirect(url_for('main.index'))
+    return render_template('question/question_form.html', form=form)

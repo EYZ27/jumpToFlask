@@ -1,6 +1,7 @@
 from pybo import db
 
 
+# question table
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)    # 플라스크는 데이터타입이 db.Integer이고 기본키로 설정한 속서은 값이 자동으로 증가하는 특징을 가지고 있다.
     subject = db.Column(db.String(200), nullable=False)
@@ -8,6 +9,7 @@ class Question(db.Model):
     create_date = db.Column(db.DateTime(), nullable=False)
 
 
+# answer table
 class Answer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question_id = db.Column(db.Integer, db.ForeignKey('question.id', ondelete='CASCADE'))   # 답변을 질문에 참조할 때 / ForeignKey는 참조하는 값과 동일한 타입으로 만들어줘야 한다.
@@ -18,3 +20,9 @@ class Answer(db.Model):
     # question = db.relationship('Question', backref=db.backref('answer_set', cascade='all, delete-orphan'))
 
 
+# user table
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
