@@ -7,6 +7,8 @@ class Question(db.Model):
     subject = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text(), nullable=False)
     create_date = db.Column(db.DateTime(), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)  # 그러나 이미 있던 데이터에는 user_id 값이 없다. nullable을 False로 해두면 오류가 난다. server_default는 null 대신 임의의 값을 넣어준다. server_default를 사용하면 flask db upgrade 명령을 수행할 때 null이던 데이터에도 기본값이 저장된다. default를 새로 생성되는 데이터에만 기본값을 생성해준다.
+    user = db.relationship('User', backref=db.backref('question_set'))
 
 
 # answer table
@@ -16,8 +18,10 @@ class Answer(db.Model):
     question = db.relationship('Question', backref=db.backref('answer_set'))    # Question 테이블과 관계를 가진다. backref = 참조 명칭. 어떤 질문에 해당하는 객체가 a_question일 때, a_question.answer_set과 같은 코드로 해당 질문에 달린 답변들을 참조할 수 있다.
     content = db.Column(db.Text(), nullable=False)
     create_date = db.Column(db.DateTime(), nullable=False)
-    # 실제 파이썬 코드에서 질문을 삭제할 때 답변까지 모두 삭제하려면 코드가 추가로 필요하다.
+    # 실제 파이썬 코드에서 질문을 삭제할 때 답변까지 모두 삭제하려면 아래 코드가 추가로 필요하다.
     # question = db.relationship('Question', backref=db.backref('answer_set', cascade='all, delete-orphan'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)   # 그러나 이미 있던 데이터에는 user_id 값이 없다. nullable을 False로 해두면 오류가 난다. server_default는 null 대신 임의의 값을 넣어준다. server_default를 사용하면 flask db upgrade 명령을 수행할 때 null이던 데이터에도 기본값이 저장된다. default를 새로 생성되는 데이터에만 기본값을 생성해준다.
+    user = db.relationship('User', backref=db.backref('question_set'))
 
 
 # user table

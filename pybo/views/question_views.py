@@ -1,11 +1,12 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, request, url_for
+from flask import Blueprint, render_template, request, url_for, g
 from werkzeug.utils import redirect
 
 from .. import db
 from ..models import Question
 from ..forms import QuestionForm, AnswerForm
+from pybo.views.auth_views import login_required
 
 
 bp = Blueprint('question', __name__, url_prefix='/question')
@@ -28,10 +29,11 @@ def detail(question_id):
 
 
 @bp.route('/create/', methods=('GET', 'POST'))
+@login_required     # required 데코레이터를 적용하면 해당 조건과 함수가 실행된다. 함수 바로 위에 위치해야한다.
 def create():
     form = QuestionForm()
     if request.method == 'POST' and form.validate_on_submit():  # 요청 방식 확인, 유효성 검사 통과
-        question = Question(subject=form.subject.data, content=form.content.data, create_date=datetime.now())
+        question = Question(subject=form.subject.data, content=form.content.data, create_date=datetime.now(), user=g.user)
         db.session.add(question)
         db.session.commit()
         return redirect(url_for('main.index'))
