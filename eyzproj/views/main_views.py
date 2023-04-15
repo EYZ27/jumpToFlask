@@ -1,4 +1,4 @@
-from flask import Blueprint, url_for
+from flask import Blueprint, render_template, url_for
 from werkzeug.utils import redirect
 
 
@@ -10,9 +10,16 @@ def hello_pybo():
     return 'Hello, Pybo!'
 
 
+@bp.route('/main')
+def main():
+    return render_template('main.html')
+
+
 @bp.route('/')
 def index():
-    return redirect(url_for('question._list'))  # question의 _list를 찾아서 url을 반환해주는 함수 url_for
-    # blueprint명 'question', 그 안에 함수명 '_list'
+    return redirect(url_for('main.main'))
+
+    # return redirect(url_for('question._list'))  # question의 _list를 찾아서 url을 반환해주는 함수 url_for
+    # # blueprint명 'question', 그 안에 함수명 '_list'
 
 # 마지막 줄에 빈 칸 있어야 함

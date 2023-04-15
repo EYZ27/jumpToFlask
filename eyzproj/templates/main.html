@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>HOME</title>
+</head>
+<body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    {% extends 'base.html' %}
+    {% block content %}
+    <div class="container">
+        <br>
+        <h2 class="border-bottom py-2">
+            안녕하세요. EYZ의 홈페이지입니다.
+        </h2>
+        <div class="card-body">
+            <div class="card-text">
+                <br>
+                <img src="static/eyz.jpg" width="500">
+                <br>
+                <h4>반갑습니다! 질문 목록으로 이동하려면 아래 버튼을 눌러주세요.</h4>
+                <br>
+            </div>
+            <div class="my-3">
+                <a href="{{ url_for('question._list') }}" class="btn btn-primary">질문 목록</a>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>
