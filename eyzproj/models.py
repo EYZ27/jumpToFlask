@@ -1,4 +1,4 @@
-from pybo import db
+from . import db
 
 question_hitter = db.Table(
     'question_hitter',
