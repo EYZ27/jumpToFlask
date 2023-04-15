@@ -44,6 +44,8 @@ def _list():
 def detail(question_id):
     form = AnswerForm()
     question = Question.query.get_or_404(question_id) # 404 오류면 오류페이지를 내보내겠다
+    question.hits += 1
+    db.session.commit()
     return render_template('question/question_detail.html', question=question, form=form)
 
 
@@ -103,9 +105,10 @@ def vote(question_id):
 
 
 # 조회수 함수
-@bp.route('/hits/', method=('GET'))
-def get_hits():
+@bp.route('/hits/<int:question_id>/')
+def get_hits(question_id):
     _question = Question.query.get_or_404(question_id)
-    _question.hits.append(g.user)
+    if g.user not in _question.hits:
+        _question.hits.append(g.user)
     db.session.commit()
-    return redirect(url_for('question.detail', question_id=question_id))
+    return redirect(url_for('question._list', question_id=question_id))
