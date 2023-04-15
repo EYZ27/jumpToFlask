@@ -1,11 +1,5 @@
 from . import db
 
-question_hitter = db.Table(
-    'question_hitter',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
-    db.Column('question_id', db.Integer, db.ForeignKey('question.id', ondelete='CASCADE'), primary_key=True)
-)
-
 
 question_voter = db.Table(
     'question_voter',
@@ -21,8 +15,7 @@ answer_voter = db.Table(
 )
 
 
-
-# question table
+################### question table ###################
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)    # 플라스크는 데이터타입이 db.Integer이고 기본키로 설정한 속성은 값이 자동으로 증가하는 특징을 가지고 있다.
     subject = db.Column(db.String(200), nullable=False)
@@ -35,7 +28,7 @@ class Question(db.Model):
     hits = db.Column(db.Integer, nullable=True, server_default='0')
 
 
-# answer table
+################### answer table ###################
 class Answer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question_id = db.Column(db.Integer, db.ForeignKey('question.id', ondelete='CASCADE'))   # 답변을 질문에 참조할 때 / ForeignKey는 참조하는 값과 동일한 타입으로 만들어줘야 한다.
@@ -50,7 +43,7 @@ class Answer(db.Model):
     voter = db.relationship('User', secondary=answer_voter, backref=db.backref('answer_voter_set'))
 
 
-# user table
+################### user table ###################
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
