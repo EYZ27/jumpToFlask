@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 
 import config
+from flaskext.markdown import Markdown
 
 # SQLite 설정 수정하기
 # pk, fk 등의 제약조건 이름을 수동으로 설정하기 위한 딕셔너리
@@ -40,6 +41,9 @@ def create_app():
     # 필터
     from .filter import format_datetime
     app.jinja_env.filters['datetime'] = format_datetime
+
+    # markdown
+    Markdown(app, extensions=['nl2br', 'fenced_code'])
 
     # @app.route('/') # 어노테이션: 경로를 지정해주는 함수. URL과 플라스크 코드를 매핑해주는 함수.
     # def hello_pybo():

@@ -4,9 +4,9 @@ from flask import Blueprint, render_template, request, url_for, g, flash
 from werkzeug.utils import redirect
 
 from .. import db
-from ..models import Question
+from ..models import Question, Answer, User
 from ..forms import QuestionForm, AnswerForm
-from pybo.views.auth_views import login_required
+from ..views.auth_views import login_required
 
 
 bp = Blueprint('question', __name__, url_prefix='/question')
@@ -14,10 +14,29 @@ bp = Blueprint('question', __name__, url_prefix='/question')
 
 @bp.route('/list/')
 def _list():
-    page = request.args.get('page', type=int, default=1)    # 페이지
-    question_list = Question.query.order_by(Question.create_date.desc())
-    question_list = question_list.paginate(page=page, per_page=10)
-    return render_template('question/question_list.html', question_list=question_list)
+    page = request.args.get('page', type=int, default=1)    # 페이지 get, 해당사항 없으면 1페이지부터
+    kw = request.args.get('kw', type=str, default='')       # 키워드 get
+    question_list = Question.query.order_by(Question.create_date.desc())    # 내림차순 정렬
+    if kw:  # 키워드 있으면
+        search = '%%{}%%'.format(kw)
+        sub_query = db.session.query(Answer.question_id, Answer.content, User.username) \
+            .join(User, Answer.user_id == User.id).subquery()
+        question_list = question_list \
+            .join(User) \
+            .outerjoin(sub_query, sub_query.c.question_id == Question.id) \
+            .filter(Question.subject.ilike(search) |  # 질문제목
+                    Question.content.ilike(search) |  # 질문내용
+                    User.username.ilike(search) |  # 질문작성자
+                    sub_query.c.content.ilike(search) |  # 답변내용
+                    sub_query.c.username.ilike(search)  # 답변작성자
+                    ) \
+            .distinct()
+    question_list = question_list.paginate(page=page, per_page=10)  # 위에서 가져온 question_list를 가지고 페이지 내에 10개씩 표시
+    return render_template('question/question_list.html', question_list=question_list, page=page, kw=kw)
+    # page = request.args.get('page', type=int, default=1)    # 페이지
+    # question_list = Question.query.order_by(Question.create_date.desc())
+    # question_list = question_list.paginate(page=page, per_page=10)
+    # return render_template('question/question_list.html', question_list=question_list)
     # render_template 가 html 파일 내의 파이썬 코드를 다 rendering 시켜서 html 코드로 넣어준다.
 
 
@@ -69,3 +88,24 @@ def delete(question_id):
     db.session.delete(question)
     db.session.commit()
     return redirect(url_for('question._list'))
+
+# 질문 추천 라우팅 함수
+@bp.route('/vote/<int:question_id>/')
+@login_required
+def vote(question_id):
+    _question = Question.query.get_or_404(question_id)
+    if g.user == _question.user:
+        flash('본인이 작성한 글은 추천할 수 없습니다')
+    else:
+        _question.voter.append(g.user)
+        db.session.commit()
+    return redirect(url_for('question.detail', question_id=question_id))
+
+
+# 조회수 함수
+@bp.route('/hits/', method=('GET'))
+def get_hits():
+    _question = Question.query.get_or_404(question_id)
+    _question.hits.append(g.user)
+    db.session.commit()
+    return redirect(url_for('question.detail', question_id=question_id))
